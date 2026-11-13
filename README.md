@@ -7,9 +7,9 @@ Eigenständige Kiosk-Seite, unabhängig von der PitchPeak-App. Ein Thinking Head
 | Situation | Reaktion |
 | --- | --- |
 | Niemand da | Kopf schaut herum und führt ab und zu ein Selbstgespräch |
-| Person weiter weg im Raum | „Hey, du da hinten! Komm mal näher!“ |
-| Person steht nah davor | Zeigt auf sie: „Ich will DICH!“, danach kurzer Pitch zu PitchPeak und Hinweis auf den QR-Code |
-| Person geht während des Pitches | „Hey, wo gehst du hin?“, danach kurze Pause |
+| Person weiter weg im Raum | „Hey, du da hinten! Ja, genau du! Schau mal kurz her!“ |
+| Person steht nah davor | Zeigt auf sie: „Hey, DU! Genau dich such ich!“, danach ein paar Sätze zu PitchPeak und zur HTL |
+| Person geht während des Pitches | „Bis später! Schau gern nochmal vorbei!“, danach kurze Pause |
 
 Bei mehreren Personen wird immer die nächste angesprochen. Bleibt jemand weiter weg stehen, ruft der Kopf alle 12 Sekunden erneut.
 
