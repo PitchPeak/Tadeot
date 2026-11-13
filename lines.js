@@ -1,31 +1,33 @@
 // Alle Sprüche des Thinking Heads. Nach Änderungen die Audiodateien neu erzeugen:
 //   python generate_voices.py
 // (Steht ein Text hier ohne passende Audiodatei, spricht die Browserstimme.)
+//
+// Zielgruppe: Kinder und Jugendliche (ca. 13–15) mit ihren Eltern am Tag der offenen Tür.
+// Ton: locker, freundlich, witzig. Nicht "komm her / komm näher", nichts, was aufdringlich wirkt.
 window.LINES = {
   "expert": {
     "spotFar": [
-      "Hey, du da hinten! Ja, genau du. Komm mal näher!",
-      "Dich mein ich! Komm her, ich beiß nicht."
+      "Hey, du da hinten! Ja, genau du! Schau mal kurz her!",
+      "Hallo! Hast du kurz Zeit für einen sprechenden Kopf?"
     ],
     "spot": [
-      "Ich will DICH!",
-      "Hey, DU! Genau dich such ich.",
-      "Du! Ja, du mit dem neugierigen Blick!"
+      "Hey, DU! Genau dich such ich!",
+      "Hallo! Du siehst aus, als würdest du gern Sachen ausprobieren."
     ],
     "pitchLines": [
-      "Ich will dich … für deinen nächsten Pitch.",
-      "Ich bin ein Thinking Head. Ich hör mir deine Präsentation an und sag dir ehrlich, wie sie ankommt.",
-      "Sprechtempo, Füllwörter, Struktur – ich merk mir alles. Ähm, fast alles.",
-      "Scan den QR-Code oder probier’s gleich hier am Stand aus!"
+      "Ich bin ein Thinking Head. Schüler hier an der HTL haben mich programmiert.",
+      "Ich hör mir Präsentationen an und sag ehrlich, was gut war und was nicht.",
+      "Zu schnell geredet? Zu viele Ähms? Mir entgeht nichts!",
+      "Probier’s gleich hier am Stand aus. Und wer weiß, vielleicht baust du sowas bald selber!"
     ],
     "leave": [
-      "Hey, wo gehst du hin? Na gut – bis zum nächsten Pitch!",
-      "Schade. Ich hätte dir so gerne Feedback gegeben."
+      "Bis später! Schau gern nochmal vorbei!",
+      "Viel Spaß noch beim Rundgang!"
     ],
     "idle": [
-      "Niemand da … dann üb ich halt meinen eigenen Pitch.",
-      "Ähm … also … ähm. Okay, zu viele Füllwörter.",
-      "Ich warte auf dich. Ja, auf dich!"
+      "Ist hier jemand, der gern programmiert?",
+      "Ähm … also … ähm. Okay, zu viele Füllwörter. Ich übe noch.",
+      "Ich bin ein Kopf ohne Körper. Aber dafür mit sehr viel Code."
     ],
     "test": [
       "Hallo, so klinge ich."
@@ -33,26 +35,26 @@ window.LINES = {
   },
   "critic": {
     "spotFar": [
-      "Du da. Ja, du. Näher. Ich seh dich kaum.",
-      "Komm her. Ich hab Fragen."
+      "Hey, du da! Ja, du! Traust du dich, mir was zu präsentieren?",
+      "Hallo! Ich bin der strengste Zuhörer hier. Mutig genug?"
     ],
     "spot": [
-      "Ich will DICH. Aber überzeug mich erst.",
-      "Du. Ja, du. Ich hab eine kritische Rückfrage."
+      "Hey, DU! Ich hab eine Challenge für dich!",
+      "Na? Bereit für ehrliches Feedback?"
     ],
     "pitchLines": [
-      "Ich will dich … und deine beste Argumentation.",
-      "Ich bin der kritische Zuhörer. Jede Lücke in deinem Vortrag – ich find sie.",
-      "Glaubst du, du hältst einen Pitch ohne ein einziges Ähm durch? Beweis es.",
-      "QR-Code scannen. Oder hier am Stand üben. Ich warte."
+      "Ich bin der kritische Zuhörer. Bei mir gibt’s keine Ausreden!",
+      "Schaffst du einen Vortrag ganz ohne Ähm? Ich bin gespannt.",
+      "Programmiert haben mich Schüler hier an der HTL. Die sind übrigens ziemlich gut.",
+      "Probier’s am Stand aus. Ich bin streng, aber fair!"
     ],
     "leave": [
-      "Weglaufen ist auch eine Antwort.",
-      "Interessant. Keine Gegenargumente?"
+      "Okay, bis später! Die Challenge läuft nicht weg.",
+      "Tschüss! Und viel Spaß noch!"
     ],
     "idle": [
-      "Hmpf. Keiner da, den ich kritisieren kann.",
-      "Ich hätte da noch eine Rückfrage … an niemanden."
+      "Hmm. Gerade niemand da, den ich bewerten kann.",
+      "Zehn von zehn Punkten für diesen leeren Gang."
     ],
     "test": [
       "Hallo, so klinge ich."
@@ -60,26 +62,26 @@ window.LINES = {
   },
   "beginner": {
     "spotFar": [
-      "Hallo! Huhu! Komm doch mal her!",
-      "Oh, ein Mensch! Komm näher!"
+      "Hallo! Huhu! Ja, du! Schau mal her!",
+      "Oh, hallo! Hast du kurz Zeit?"
     ],
     "spot": [
-      "Ich will DICH! Erklär mir was!",
-      "Hi! Du siehst aus, als könntest du gut erklären!"
+      "Hey, DU! Kannst du mir was erklären?",
+      "Hi! Du siehst aus, als könntest du richtig gut erklären!"
     ],
     "pitchLines": [
-      "Ich will dich … weil ich von deinem Thema keine Ahnung hab.",
-      "Ich bin der Anfänger. Wenn ich’s verstehe, versteht’s jeder.",
-      "Bitte keine Fachbegriffe ohne Erklärung, okay?",
-      "Scan den QR-Code und erklär mir die Welt!"
+      "Ich bin der Anfänger. Wenn ich’s verstehe, versteht’s jeder!",
+      "Erklär mir irgendwas. Egal was. Hauptsache ohne Fachchinesisch.",
+      "Mich haben übrigens Schüler hier an der HTL gebaut. Cool, oder?",
+      "Probier’s gleich am Stand aus. Ich hör gut zu, versprochen!"
     ],
     "leave": [
-      "Och, schon weg? Tschüss!",
-      "Warte, ich hab’s noch nicht verstanden!"
+      "Tschüss! Bis bald!",
+      "Bis später! War nett mit dir!"
     ],
     "idle": [
       "Hallo? Ist da jemand?",
-      "Mir ist langweilig. Erklärt mir jemand was?"
+      "Mir ist langweilig. Erklärt mir jemand, wie Computer funktionieren?"
     ],
     "test": [
       "Hallo, so klinge ich."

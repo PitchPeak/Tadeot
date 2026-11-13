@@ -136,6 +136,11 @@
     display: none; white-space: pre;
   }
   body.debug #status { display: block; }
+  #chill {
+    position: fixed; right: 12px; top: 12px; z-index: 5;
+    font: 600 12px/1 "Helvetica Neue", Arial, sans-serif; color: var(--muted);
+    background: rgba(0,0,0,0.35); padding: 6px 10px; border-radius: 999px; opacity: 0.6;
+  }
 
   /* start / help overlay */
   .overlay {
@@ -192,7 +197,7 @@
 
 <header>
   <h1 class="headline">I WANT <span class="you">YOU</span></h1>
-  <p class="subline" id="subline">… für deinen nächsten Pitch</p>
+  <p class="subline" id="subline">… an der HTL</p>
 </header>
 
 <div class="stage">
@@ -256,17 +261,14 @@
         </g>
 
         <!-- top hat in PitchPeak colours -->
+        <!-- plain top hat in PitchPeak colours -->
         <g id="hat">
-          <ellipse cx="300" cy="200" rx="150" ry="26" fill="#24203a" />
-          <path d="M200 196 L214 40 Q300 22 386 40 L400 196 Q300 214 200 196z" fill="var(--cream)" />
-          <path d="M207 120 L393 120 L396 156 L204 156z" fill="var(--red)" opacity="0.9" />
-          <path d="M211 80 L389 80 L391 104 L209 104z" fill="var(--red)" opacity="0.9" />
-          <path d="M202 170 Q300 186 398 170 L400 196 Q300 214 200 196z" fill="var(--accent)" />
-          <g fill="#fff">
-            <path id="star" d="M300 172l5 10 11 1-8 7 3 11-11-6-10 6 3-11-8-7 11-1z" />
-            <use href="#star" x="-60" y="-2" /><use href="#star" x="60" y="-2" />
-          </g>
-          <path d="M214 40 Q300 22 386 40 Q300 58 214 40z" fill="#e8dcc6" />
+          <ellipse cx="300" cy="200" rx="150" ry="26" fill="#1c1830" />
+          <path d="M200 196 L214 40 Q300 22 386 40 L400 196 Q300 214 200 196z" fill="#2a2440" />
+          <path d="M214 40 L222 150 Q300 162 300 162 L300 32 Q250 30 214 40z" fill="#ffffff" opacity="0.05" />
+          <path d="M204 150 Q300 166 396 150 L400 196 Q300 214 200 196z" fill="var(--accent)" />
+          <rect x="330" y="160" width="26" height="30" rx="4" fill="none" stroke="var(--cream)" stroke-width="5" />
+          <path d="M214 40 Q300 22 386 40 Q300 58 214 40z" fill="#3a3356" />
         </g>
       </g>
 
@@ -296,12 +298,13 @@
   <div id="qr" aria-label="QR-Code zu PitchPeak"></div>
   <div>
     <div class="brand">Pitch<span>Peak</span></div>
-    <div class="cta" id="cta">Scan mich und probier’s aus – oder üb deinen Pitch gleich hier am Stand.</div>
+    <div class="cta" id="cta">Von Schülern der HTL programmiert. Probier’s gleich hier am Stand aus!</div>
   </div>
 </footer>
 
 <video id="preview" autoplay muted playsinline></video>
 <div id="status"></div>
+<div id="chill" hidden>Pause · P</div>
 
 <div class="overlay" id="start">
   <div class="panel">
@@ -310,6 +313,7 @@
     <p>
       <kbd>Leertaste</kbd> manuell ansprechen ·
       <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> Fachperson / Kritiker / Anfänger ·
+      <kbd>P</kbd> Pause (Kopf chillt, reagiert auf niemanden) ·
       <kbd>V</kbd> Stimme wechseln ·
       <kbd>M</kbd> Ton aus/an ·
       <kbd>F</kbd> Vollbild ·
@@ -393,8 +397,8 @@ function applyRole(key) {
   // critic frowns with one raised brow
   $('#browL').setAttribute('d', key === 'critic' ? 'M222 252q33 4 64 14' : 'M222 258q33-16 64 0');
   $('#browR').setAttribute('d', key === 'critic' ? 'M314 248q31-26 64-4' : 'M314 258q31-16 64 0');
-  $('#subline').textContent = key === 'critic' ? '… aber überzeug mich erst'
-    : key === 'beginner' ? '… erklär mir dein Thema' : '… für deinen nächsten Pitch';
+  $('#subline').textContent = key === 'critic' ? '… für eine Challenge'
+    : key === 'beginner' ? '… erklär mir was!' : '… an der HTL';
 }
 
 /* ---------- gaze ---------- */
@@ -570,7 +574,20 @@ async function runLeave() {
   setState('idle');
 }
 
+let chill = false;
+function setChill(on) {
+  chill = on;
+  $('#chill').hidden = !on;
+  ++routine; shutUp(); point(false); setState('idle');
+  lastIdleTalk = performance.now();
+  cooldownUntil = performance.now() + 2000;
+}
+
 function tick() {
+  if (chill) {
+    statusEl.textContent = `PAUSE (P) – reagiert auf niemanden\nKamera: ${cameraState}`;
+    return;
+  }
   const now = performance.now();
   const present = !!face;
 
@@ -707,7 +724,8 @@ function useMouse() {
 /* ---------- controls ---------- */
 addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
-  if (k === ' ') { e.preventDefault(); cooldownUntil = 0; runEngaged(); }
+  if (k === 'p') { setChill(!chill); }
+  else if (k === ' ') { e.preventDefault(); if (!chill) { cooldownUntil = 0; runEngaged(); } }
   else if (k === '1' || k === '2' || k === '3') {
     shutUp(); point(false); setState('idle');
     applyRole(['expert', 'critic', 'beginner'][+k - 1]);

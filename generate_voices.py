@@ -10,7 +10,7 @@ Dann im Ordner tag-der-offenen-tuer:
     python generate_voices.py
 
 Die Stimmmodelle (~190 MB) werden beim ersten Lauf nach ./.voices geladen (nicht im Git).
-Bereits erzeugte Dateien werden übersprungen; Dateien zu gelöschten Texten werden entfernt.
+Unveränderte Texte (gleicher Text, gleiche Stimme) werden übersprungen; Dateien zu gelöschten Texten werden entfernt.
 """
 import hashlib
 import json
@@ -38,7 +38,7 @@ MODELS = {
 # pitch < 1 macht die Stimme tiefer (Tempo bleibt gleich).
 ROLE_VOICES = {
     "expert": {"model": "thorsten-high", "speaker": 0, "length_scale": 1.0, "pitch": 1.0},
-    "critic": {"model": "thorsten-high", "speaker": 0, "length_scale": 1.08, "pitch": 0.9},
+    "critic": {"model": "thorsten-emotional", "speaker": 4, "length_scale": 1.0, "pitch": 1.0},
     "beginner": {"model": "thorsten-emotional", "speaker": 6, "length_scale": 0.95, "pitch": 1.0},
 }
 
@@ -52,8 +52,10 @@ PRONOUNCE = {
 }
 
 
-def audio_name(text: str) -> str:
-    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12] + ".mp3"
+def audio_name(text: str, cfg: dict) -> str:
+    # Stimmeinstellung gehört zum Namen: ändert sich die Stimme, wird neu erzeugt
+    key = text + json.dumps(cfg, sort_keys=True) + json.dumps(PRONOUNCE, sort_keys=True)
+    return hashlib.sha1(key.encode("utf-8")).hexdigest()[:12] + ".mp3"
 
 
 def tts_text(text: str) -> str:
@@ -90,7 +92,7 @@ def main() -> None:
         manifest[role] = {}
         wanted = set()
         for text in dict.fromkeys(t for group in groups.values() for t in group):
-            name = audio_name(text)
+            name = audio_name(text, cfg)
             wanted.add(name)
             manifest[role][text] = f"audio/{role}/{name}"
             target = out_dir / name

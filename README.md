@@ -42,6 +42,7 @@ npx serve .
 
 | Taste | Funktion |
 | --- | --- |
+| P | **Pause**: Kopf chillt, reagiert auf niemanden und sagt nichts. Nochmal P = weiter |
 | Leertaste | Person manuell ansprechen |
 | 1 / 2 / 3 | Fachperson / kritischer Zuhörer / Anfänger |
 | V | Notfall-Browserstimme wechseln (nur relevant, wenn MP3s fehlen) |
@@ -58,8 +59,8 @@ Gesprochen wird mit fertigen MP3-Dateien im Ordner `audio/`. Die Stimme ist **�
 
 | Rolle | Stimme | Gemessene Tonhöhe |
 | --- | --- | --- |
-| Fachperson | Thorsten (hohe Qualität) | ca. 113 Hz |
-| Kritiker | Thorsten, 10 % tiefer und etwas langsamer | ca. 101 Hz |
+| Fachperson | Thorsten (hohe Qualität) | ca. 115 Hz |
+| Kritiker | Thorsten „neutral“ | ca. 122 Hz |
 | Anfänger | Thorsten „überrascht“ | ca. 129 Hz |
 
 Männerstimmen liegen typischerweise bei 85–155 Hz.
