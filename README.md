@@ -22,7 +22,7 @@ Erkannt wird auf zwei Wegen, beide laufen lokal im Browser (MediaPipe):
 
 ## Starten
 
-**Online:** https://pitchpeak.github.io/tadeot/ (läuft auf jedem Gerät mit Browser und Webcam)
+**Online:** https://pitchpeak.github.io/Tadeot/ (läuft auf jedem Gerät mit Browser und Webcam)
 
 1. Link in Chrome oder Edge öffnen.
 2. **Starten** klicken. Das schaltet Vollbild und Ton frei und fragt nach der Kamera.
