@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>I Want You – PitchPeak</title>
+<style>
+  :root {
+    --bg: #14061f;
+    --bg-2: #2a0b52;
+    --accent: #6a00ff;
+    --accent-2: #a46bff;
+    --red: #e0284f;
+    --cream: #fff6e8;
+    --text: #ffffff;
+    --muted: #c9bde6;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(ellipse at 50% 35%, var(--bg-2) 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    justify-items: center;
+    user-select: none;
+    cursor: none;
+  }
+  body.show-cursor { cursor: default; }
+
+  /* poster rays behind the head */
+  .rays {
+    position: fixed; inset: -50%;
+    background: repeating-conic-gradient(from 0deg at 50% 50%,
+      rgba(164,107,255,0.07) 0deg 8deg, transparent 8deg 16deg);
+    animation: spin 120s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  header {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding-top: 2.5vh;
+    line-height: 0.9;
+  }
+  .headline {
+    font-size: clamp(48px, 10vh, 140px);
+    letter-spacing: 0.02em;
+    color: var(--cream);
+    text-shadow: 0.06em 0.06em 0 var(--red), 0.12em 0.12em 0 rgba(0,0,0,0.35);
+    margin: 0;
+    transition: transform 0.25s ease;
+  }
+  .headline .you { color: var(--red); text-shadow: 0.06em 0.06em 0 var(--cream), 0.12em 0.12em 0 rgba(0,0,0,0.35); }
+  body.engaged .headline { transform: scale(1.06); }
+  .subline {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700;
+    font-size: clamp(18px, 3.2vh, 40px);
+    color: var(--muted);
+    margin: 1.2vh 0 0;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .stage {
+    position: relative; z-index: 1;
+    width: min(100vw, 110vh);
+    height: 100%;
+    min-height: 0;
+  }
+  #head { width: 100%; height: 100%; display: block; overflow: visible; }
+
+  .bubble {
+    position: absolute; z-index: 3;
+    right: 64%; top: 30%;
+    transform: scale(0.9);
+    transform-origin: right center;
+    width: max-content;
+    max-width: min(34vw, 560px);
+    background: var(--cream);
+    color: #1d1028;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800;
+    font-size: clamp(20px, 3.6vh, 46px);
+    line-height: 1.2;
+    padding: 0.6em 1em;
+    border-radius: 1em;
+    box-shadow: 0.18em 0.18em 0 var(--red);
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    text-align: center;
+    pointer-events: none;
+  }
+  .bubble.on { opacity: 1; transform: scale(1); }
+  .bubble::after {
+    content: ""; position: absolute; right: -0.9em; top: 50%;
+    border: 0.6em solid transparent; border-left: 0.9em solid var(--cream);
+    transform: translateY(-50%);
+  }
+  @media (max-aspect-ratio: 1/1) {
+    .bubble { right: auto; left: 50%; top: 2%; transform: translateX(-50%) scale(0.9); max-width: 90vw; }
+    .bubble.on { transform: translateX(-50%) scale(1); }
+    .bubble::after { display: none; }
+  }
+
+  footer {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; gap: 2vw;
+    padding: 0 3vw 2.5vh;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+  }
+  .brand { font-size: clamp(22px, 4vh, 52px); font-weight: 900; letter-spacing: 0.02em; }
+  .brand span { color: var(--accent-2); }
+  .cta { font-size: clamp(14px, 2.2vh, 26px); color: var(--muted); font-weight: 600; max-width: 40ch; }
+  #qr {
+    background: #fff; padding: 8px; border-radius: 10px;
+    width: clamp(90px, 14vh, 180px); height: clamp(90px, 14vh, 180px);
+  }
+  #qr img, #qr canvas { width: 100% !important; height: 100% !important; }
+
+  /* camera preview (debug, toggle with C) */
+  #preview {
+    position: fixed; right: 12px; bottom: 12px; z-index: 5;
+    width: 220px; border-radius: 10px; border: 2px solid var(--accent-2);
+    transform: scaleX(-1); display: none;
+  }
+  body.debug #preview { display: block; }
+  #status {
+    position: fixed; left: 12px; bottom: 12px; z-index: 5;
+    font: 12px/1.4 ui-monospace, monospace; color: var(--muted);
+    background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px;
+    display: none; white-space: pre;
+  }
+  body.debug #status { display: block; }
+
+  /* start / help overlay */
+  .overlay {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid; place-items: center;
+    background: rgba(10, 2, 20, 0.88);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    cursor: default;
+  }
+  .overlay[hidden] { display: none; }
+  .panel {
+    max-width: 640px; margin: 16px; padding: 28px 32px;
+    background: #22103d; border: 2px solid var(--accent-2); border-radius: 16px;
+    line-height: 1.5;
+  }
+  .panel h2 { margin: 0 0 12px; font-family: "Arial Black", Arial, sans-serif; }
+  .panel kbd {
+    display: inline-block; min-width: 1.8em; text-align: center;
+    background: #fff; color: #22103d; border-radius: 5px; padding: 0 6px; font-weight: 800;
+  }
+  .panel button {
+    margin-top: 16px; font: 800 20px "Helvetica Neue", Arial, sans-serif;
+    background: var(--accent); color: #fff; border: 0; border-radius: 999px;
+    padding: 14px 28px; cursor: pointer;
+  }
+  .panel .note { color: var(--muted); font-size: 14px; }
+
+  /* ---- head animation ---- */
+  .breathe { animation: breathe 3.6s ease-in-out infinite; transform-origin: 300px 560px; }
+  @keyframes breathe { 50% { transform: translateY(-4px); } }
+  .lid { transform-box: fill-box; transform-origin: top; transform: scaleY(0); }
+  .blink .lid { animation: blink 0.18s ease-in-out; }
+  @keyframes blink { 50% { transform: scaleY(1); } }
+  .mouth-talk { opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .speaking .mouth-rest { opacity: 0; }
+  .speaking .mouth-talk { opacity: 1; animation: talk 0.28s ease-in-out infinite alternate; }
+  @keyframes talk {
+    0% { transform: scaleY(0.2) scaleX(0.9); }
+    50% { transform: scaleY(1) scaleX(1); }
+    100% { transform: scaleY(0.6) scaleX(1.05); }
+  }
+  .hand { transform-box: fill-box; transform-origin: center; transition: transform 0.35s cubic-bezier(.3,1.6,.5,1), opacity 0.3s; }
+  .pointing .hand { animation: jab 1.2s ease-in-out infinite; }
+  @keyframes jab { 0%,100% { transform: scale(1); } 40% { transform: scale(1.12); } }
+  .hand-off .hand { transform: translateY(160px) scale(0.6); opacity: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rays, .breathe, .pointing .hand { animation: none !important; }
+  }
+</style>
+</head>
+<body class="show-cursor">
+<div class="rays"></div>
+
+<header>
+  <h1 class="headline">I WANT <span class="you">YOU</span></h1>
+  <p class="subline" id="subline">… für deinen nächsten Pitch</p>
+</header>
+
+<div class="stage">
+  <div class="bubble" id="bubble"></div>
+  <!-- The thinking head. All parts that react live are addressed by id. -->
+  <svg id="head" viewBox="0 0 600 640" xmlns="http://www.w3.org/2000/svg" aria-label="Thinking Head">
+    <defs>
+      <clipPath id="eyeL"><ellipse cx="255" cy="300" rx="26" ry="20" /></clipPath>
+      <clipPath id="eyeR"><ellipse cx="345" cy="300" rx="26" ry="20" /></clipPath>
+    </defs>
+    <g class="breathe">
+      <!-- body: suit + bow tie -->
+      <g id="body">
+        <path d="M70 640c10-120 100-180 230-180s220 60 230 180z" id="jacket" fill="#2e2a45" />
+        <path d="M245 462l55 90 55-90z" fill="#ffffff" />
+        <path d="M245 462l-40 30 60 110 35-50z M355 462l40 30-60 110-35-50z" id="lapel" fill="#24203a" />
+        <path d="M275 478l25 14-25 14z M325 478l-25 14 25 14z" fill="var(--red)" />
+        <circle cx="300" cy="492" r="7" fill="#b81d3e" />
+      </g>
+      <!-- neck -->
+      <rect x="268" y="400" width="64" height="72" rx="24" class="skin" fill="#f1c7a3" />
+
+      <!-- everything above the neck turns toward the visitor -->
+      <g id="headTurn">
+        <!-- ears -->
+        <ellipse cx="192" cy="310" rx="20" ry="28" class="skin" fill="#f1c7a3" />
+        <ellipse cx="408" cy="310" rx="20" ry="28" class="skin" fill="#f1c7a3" />
+        <!-- face -->
+        <ellipse cx="300" cy="300" rx="108" ry="122" class="skin" fill="#f1c7a3" />
+        <!-- side hair -->
+        <path id="hair" d="M194 300c-6-40 0-80 20-100l20 10c-14 20-20 50-18 92z M406 300c6-40 0-80-20-100l-20 10c14 20 20 50 18 92z" fill="#e9e4f2" />
+
+        <!-- eyes with pupils that follow -->
+        <g>
+          <ellipse cx="255" cy="300" rx="26" ry="20" fill="#fff" />
+          <ellipse cx="345" cy="300" rx="26" ry="20" fill="#fff" />
+          <g clip-path="url(#eyeL)"><g class="pupil"><circle cx="255" cy="300" r="12" fill="#2a1a4a" /><circle cx="259" cy="296" r="4" fill="#fff" /></g></g>
+          <g clip-path="url(#eyeR)"><g class="pupil"><circle cx="345" cy="300" r="12" fill="#2a1a4a" /><circle cx="349" cy="296" r="4" fill="#fff" /></g></g>
+          <rect class="lid skin" x="227" y="278" width="56" height="44" fill="#e6b791" />
+          <rect class="lid skin" x="317" y="278" width="56" height="44" fill="#e6b791" />
+        </g>
+        <!-- glasses (expert) -->
+        <g id="glasses" fill="none" stroke="#1d1b26" stroke-width="6">
+          <rect x="220" y="272" width="72" height="56" rx="20" />
+          <rect x="308" y="272" width="72" height="56" rx="20" />
+          <path d="M292 296h16" />
+        </g>
+        <!-- brows -->
+        <path id="browL" d="M222 258q33-16 64 0" stroke="#e9e4f2" stroke-width="12" stroke-linecap="round" fill="none" />
+        <path id="browR" d="M314 258q31-16 64 0" stroke="#e9e4f2" stroke-width="12" stroke-linecap="round" fill="none" />
+        <!-- nose -->
+        <path d="M300 310v34l-14 6" stroke="#000" stroke-opacity="0.2" stroke-width="7" stroke-linecap="round" fill="none" />
+        <!-- moustache + goatee (Uncle Sam style) -->
+        <path id="stache" d="M300 366c-16-10-40-10-56 6 18 2 36 2 56-2 20 4 38 4 56 2-16-16-40-16-56-6z" fill="#e9e4f2" />
+        <path id="goatee" d="M270 400c8 46 22 70 30 76 8-6 22-30 30-76-10 8-20 10-30 10s-20-2-30-10z" fill="#e9e4f2" />
+        <!-- mouth -->
+        <path class="mouth-rest" d="M276 384q24 12 48 0" stroke="#7a3030" stroke-width="6" stroke-linecap="round" fill="none" />
+        <g class="mouth-talk">
+          <ellipse cx="300" cy="388" rx="22" ry="14" fill="#5a1f24" />
+          <ellipse cx="300" cy="396" rx="13" ry="5" fill="#e46b6b" />
+        </g>
+
+        <!-- top hat in PitchPeak colours -->
+        <g id="hat">
+          <ellipse cx="300" cy="200" rx="150" ry="26" fill="#24203a" />
+          <path d="M200 196 L214 40 Q300 22 386 40 L400 196 Q300 214 200 196z" fill="var(--cream)" />
+          <path d="M207 120 L393 120 L396 156 L204 156z" fill="var(--red)" opacity="0.9" />
+          <path d="M211 80 L389 80 L391 104 L209 104z" fill="var(--red)" opacity="0.9" />
+          <path d="M202 170 Q300 186 398 170 L400 196 Q300 214 200 196z" fill="var(--accent)" />
+          <g fill="#fff">
+            <path id="star" d="M300 172l5 10 11 1-8 7 3 11-11-6-10 6 3-11-8-7 11-1z" />
+            <use href="#star" x="-60" y="-2" /><use href="#star" x="60" y="-2" />
+          </g>
+          <path d="M214 40 Q300 22 386 40 Q300 58 214 40z" fill="#e8dcc6" />
+        </g>
+      </g>
+
+      <!-- pointing hand, coming out toward the visitor -->
+      <g id="handGroup">
+        <g class="hand">
+          <ellipse cx="440" cy="560" rx="70" ry="64" fill="#2e2a45" class="sleeve" />
+          <ellipse cx="440" cy="548" rx="58" ry="50" fill="#fff" />
+          <ellipse cx="440" cy="530" rx="56" ry="54" class="skin" fill="#f1c7a3" />
+          <!-- curled fingers -->
+          <path d="M398 548q42 28 84 0" stroke="#000" stroke-opacity="0.15" stroke-width="6" fill="none" stroke-linecap="round" />
+          <path d="M404 530q36 22 72 0" stroke="#000" stroke-opacity="0.12" stroke-width="5" fill="none" stroke-linecap="round" />
+          <!-- thumb -->
+          <path d="M392 516q-10 -34 22 -38" stroke="#e6b791" stroke-width="22" fill="none" stroke-linecap="round" />
+          <!-- index finger, foreshortened toward the viewer -->
+          <ellipse cx="440" cy="488" rx="34" ry="32" class="skin" fill="#f1c7a3" />
+          <ellipse cx="440" cy="488" rx="34" ry="32" fill="#000" opacity="0.06" />
+          <ellipse cx="440" cy="482" rx="22" ry="18" fill="#f6d9c0" />
+          <ellipse cx="440" cy="474" rx="14" ry="9" fill="#fbe9dc" />
+        </g>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<footer>
+  <div id="qr" aria-label="QR-Code zu PitchPeak"></div>
+  <div>
+    <div class="brand">Pitch<span>Peak</span></div>
+    <div class="cta" id="cta">Scan mich und probier’s aus – oder üb deinen Pitch gleich hier am Stand.</div>
+  </div>
+</footer>
+
+<video id="preview" autoplay muted playsinline></video>
+<div id="status"></div>
+
+<div class="overlay" id="start">
+  <div class="panel">
+    <h2>Thinking Head – Tag der offenen Tür</h2>
+    <p>Der Kopf sucht per Webcam die Person vor dem Bildschirm, folgt ihr mit den Augen, zeigt auf sie und spricht sie an. Bilder werden nur lokal im Browser ausgewertet, nichts wird gespeichert oder hochgeladen.</p>
+    <p>
+      <kbd>Leertaste</kbd> manuell ansprechen ·
+      <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> Fachperson / Kritiker / Anfänger ·
+      <kbd>V</kbd> Stimme wechseln ·
+      <kbd>M</kbd> Ton aus/an ·
+      <kbd>F</kbd> Vollbild ·
+      <kbd>C</kbd> Kamera-Debug ·
+      <kbd>H</kbd> diese Hilfe
+    </p>
+    <p class="note">Ohne Kamera folgt der Kopf der Maus. Die Stimme kommt aus fertigen MP3-Dateien (Männerstimme „Thorsten“) und funktioniert in jedem Browser, auch offline.</p>
+    <button id="go">Starten</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="lines.js"></script>
+<script src="audio/manifest.js"></script>
+<script type="module">
+/* =========================================================================
+   Konfiguration – Texte hier anpassen
+   ========================================================================= */
+const APP_URL = 'https://if210083.cloud.htl-leonding.ac.at';
+
+const ROLES = {
+  expert: {
+    name: 'Fachperson',
+    skin: '#f1c7a3', lid: '#e6b791', hair: '#e9e4f2', glasses: true, jacket: '#2e2a45',
+    pitch: 1.0, rate: 1.0,
+    voices: ['Conrad', 'Florian', 'Killian', 'Stefan', 'Markus', 'Yannick', 'Michael', 'Jonas'],
+  },
+  critic: {
+    name: 'Kritiker',
+    skin: '#d9a37b', lid: '#c48d66', hair: '#2b2b2b', glasses: false, jacket: '#9d2d55',
+    pitch: 0.9, rate: 0.95,
+    voices: ['Killian', 'Conrad', 'Stefan', 'Markus', 'Florian', 'Michael', 'Jonas', 'Yannick'],
+  },
+  beginner: {
+    name: 'Anfänger',
+    skin: '#f6d2b5', lid: '#e9bd9a', hair: '#8a5a2b', glasses: false, jacket: '#0ea5a4',
+    pitch: 1.1, rate: 1.05,
+    voices: ['Jonas', 'Florian', 'Yannick', 'Michael', 'Conrad', 'Stefan', 'Markus', 'Killian'],
+  },
+};
+// Texte kommen aus lines.js
+for (const k in ROLES) Object.assign(ROLES[k], window.LINES?.[k] ?? {});
+
+
+const T = {
+  nearFace: 0.14,             // ab dieser Gesichtsbreite (Anteil an Bildbreite) gilt die Person als "nah"
+  nearPerson: 0.85,           // … oder wenn der Körper so viel der Bildhöhe füllt (ca. 2 m Abstand)
+  minPersonScore: 0.4,        // Mindest-Sicherheit der Personenerkennung (weite Distanz)
+  farRepeatMs: 12000,         // weit weg und kommt nicht näher: so oft erneut rufen
+  spotDelayMs: 700,           // so lange muss jemand sichtbar sein, bevor er angesprochen wird
+  lostAfterMs: 2500,          // so lange ohne Gesicht gilt die Person als gegangen
+  cooldownMs: 6000,           // Pause nach Verabschiedung
+  idleEveryMs: 25000,         // Selbstgespräche, wenn niemand da ist
+};
+
+/* ========================================================================= */
+const $ = (s) => document.querySelector(s);
+const svg = $('#head');
+const headTurn = $('#headTurn');
+const pupils = [...document.querySelectorAll('.pupil')];
+const bubble = $('#bubble');
+const statusEl = $('#status');
+const video = $('#preview');
+
+let roleKey = 'expert';
+let role = ROLES.expert;
+let muted = false;
+let voice = null;
+let germanVoices = [];
+
+/* ---------- looks ---------- */
+function applyRole(key) {
+  roleKey = key; role = ROLES[key];
+  document.querySelectorAll('.skin').forEach((el) => el.setAttribute('fill', role.skin));
+  document.querySelectorAll('.lid').forEach((el) => el.setAttribute('fill', role.lid));
+  ['#hair', '#stache', '#goatee'].forEach((s) => $(s).setAttribute('fill', role.hair));
+  ['#browL', '#browR'].forEach((s) => $(s).setAttribute('stroke', role.hair));
+  $('#glasses').style.display = role.glasses ? '' : 'none';
+  $('#jacket').setAttribute('fill', role.jacket);
+  $('.sleeve').setAttribute('fill', role.jacket);
+  // critic frowns with one raised brow
+  $('#browL').setAttribute('d', key === 'critic' ? 'M222 252q33 4 64 14' : 'M222 258q33-16 64 0');
+  $('#browR').setAttribute('d', key === 'critic' ? 'M314 248q31-26 64-4' : 'M314 258q31-16 64 0');
+  $('#subline').textContent = key === 'critic' ? '… aber überzeug mich erst'
+    : key === 'beginner' ? '… erklär mir dein Thema' : '… für deinen nächsten Pitch';
+}
+
+/* ---------- gaze ---------- */
+// target in [-1, 1]; smoothed every frame
+const gaze = { x: 0, y: 0, tx: 0, ty: 0 };
+function animateGaze() {
+  gaze.x += (gaze.tx - gaze.x) * 0.12;
+  gaze.y += (gaze.ty - gaze.y) * 0.12;
+  pupils.forEach((p) => p.setAttribute('transform', `translate(${gaze.x * 13} ${gaze.y * 8})`));
+  headTurn.setAttribute('transform',
+    `translate(${gaze.x * 14} ${gaze.y * 6}) rotate(${gaze.x * 4} 300 420)`);
+  requestAnimationFrame(animateGaze);
+}
+
+function wander() {
+  if (state !== 'idle') return;
+  gaze.tx = (Math.random() * 2 - 1) * 0.9;
+  gaze.ty = (Math.random() * 2 - 1) * 0.5;
+}
+
+(function blinkLoop() {
+  svg.classList.add('blink');
+  setTimeout(() => svg.classList.remove('blink'), 200);
+  setTimeout(blinkLoop, 2500 + Math.random() * 3500);
+})();
+
+/* ---------- speech ---------- */
+// Bekannte männliche deutsche Browserstimmen (Edge "Natural", Windows, macOS).
+// Chrome selbst bringt nur "Google Deutsch" mit, und das ist eine Frauenstimme.
+const MALE_NAMES = ['Conrad', 'Killian', 'Florian', 'Jonas', 'Stefan', 'Michael', 'Markus', 'Yannick', 'Viktor', 'Ralf', 'Bernd', 'Christoph', 'Kasper', 'Klaus'];
+const isMale = (v) => MALE_NAMES.some((n) => v.name.includes(n));
+const storageKey = () => 'tdot-voice-' + roleKey;
+
+function pickVoice() {
+  germanVoices = speechSynthesis.getVoices().filter((v) => v.lang?.toLowerCase().startsWith('de'));
+  let saved = null;
+  try { saved = localStorage.getItem(storageKey()); } catch {}
+  const byPref = (list) => {
+    for (const name of role.voices) {
+      const hit = list.find((v) => v.name.includes(name) && /natural|online/i.test(v.name))
+        || list.find((v) => v.name.includes(name));
+      if (hit) return hit;
+    }
+    return null;
+  };
+  voice = germanVoices.find((v) => v.name === saved)
+    || byPref(germanVoices)
+    || germanVoices.find(isMale)
+    || germanVoices.find((v) => v.localService) || germanVoices[0] || null;
+}
+function cycleVoice() {
+  if (!germanVoices.length) return;
+  const i = germanVoices.indexOf(voice);
+  voice = germanVoices[(i + 1) % germanVoices.length];
+  try { localStorage.setItem(storageKey(), voice.name); } catch {}
+  shutUp();
+  const token = ++speakToken;
+  bubble.textContent = 'Notfall-Browserstimme: ' + voice.name;
+  bubble.classList.add('on');
+  speakWithBrowser('Hallo, so klinge ich.', token, () => bubble.classList.remove('on'), 3000);
+}
+if ('speechSynthesis' in window) {
+  pickVoice();
+  speechSynthesis.addEventListener('voiceschanged', pickVoice);
+}
+
+let speakToken = 0;
+function say(text) {
+  const token = ++speakToken;
+  bubble.textContent = text;
+  bubble.classList.add('on');
+  svg.classList.add('speaking');
+  return new Promise((resolve) => {
+    const done = () => {
+      if (token !== speakToken) return resolve(false);
+      svg.classList.remove('speaking');
+      setTimeout(() => { if (token === speakToken) bubble.classList.remove('on'); }, 900);
+      resolve(true);
+    };
+    const fallbackMs = 1200 + text.length * 65;
+    if (muted) { setTimeout(done, fallbackMs); return; }
+    // 1. Wahl: vorab erzeugte MP3 mit Männerstimme (generate_voices.py)
+    const file = window.AUDIO?.[roleKey]?.[text];
+    if (file) {
+      player.src = file;
+      let finished = false;
+      const finish = () => { if (!finished) { finished = true; done(); } };
+      const fail = (err) => {
+        if (finished || token !== speakToken || err?.name === 'AbortError') return; // abgelöst durch neuen Spruch
+        finished = true;
+        speakWithBrowser(text, token, done, fallbackMs);
+      };
+      player.onended = finish;
+      player.onerror = fail;
+      player.play().catch(fail);
+      return;
+    }
+    speakWithBrowser(text, token, done, fallbackMs);
+  });
+}
+const player = new Audio();
+player.preload = 'auto';
+
+// 2. Wahl: Browserstimme (nur wenn keine MP3 da ist)
+function speakWithBrowser(text, token, done, fallbackMs) {
+    if (!voice || token !== speakToken) { setTimeout(done, fallbackMs); return; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = voice; u.lang = voice.lang; u.rate = role.rate;
+    u.pitch = isMale(voice) ? role.pitch : role.pitch * 0.55; // Notlösung: Frauenstimme tiefer stellen
+    let finished = false;
+    const finish = () => { if (!finished) { finished = true; done(); } };
+    u.onend = finish; u.onerror = finish;
+    setTimeout(finish, fallbackMs + 4000); // safety net if onend never fires
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+}
+function shutUp() {
+  speakToken++;
+  player.pause();
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  svg.classList.remove('speaking');
+  bubble.classList.remove('on');
+}
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+/* ---------- pointing ---------- */
+function point(on) {
+  svg.classList.toggle('pointing', on);
+  svg.classList.toggle('hand-off', !on);
+}
+
+/* ---------- state machine ----------
+   idle -> spotted (Gesicht weit weg) -> engaged (Gesicht nah) -> left -> cooldown -> idle */
+let state = 'idle';
+let faceSince = 0, lastFaceAt = 0, cooldownUntil = 0, lastIdleTalk = performance.now(), lastFarCall = 0;
+let face = null; // {x, y, w} normalised, already mirrored to screen space
+let routine = 0;
+
+function setState(s) {
+  state = s;
+  document.body.classList.toggle('engaged', s === 'engaged');
+}
+
+async function runEngaged() {
+  const my = ++routine;
+  setState('engaged');
+  point(true);
+  if (!(await say(pick(role.spot)))) return;
+  for (const line of role.pitchLines) {
+    if (my !== routine || state !== 'engaged') return;
+    await new Promise((r) => setTimeout(r, 350));
+    if (!(await say(line))) return;
+  }
+  if (my === routine) point(false);
+}
+
+async function runFar() {
+  const my = ++routine;
+  lastFarCall = performance.now();
+  setState('spotted');
+  point(true);
+  await say(pick(role.spotFar));
+  if (my === routine && state === 'spotted') point(false);
+}
+
+async function runLeave() {
+  ++routine;
+  setState('left');
+  point(false);
+  shutUp();
+  await say(pick(role.leave));
+  cooldownUntil = performance.now() + T.cooldownMs;
+  setState('idle');
+}
+
+function tick() {
+  const now = performance.now();
+  const present = !!face;
+
+  if (present) {
+    if (!faceSince) faceSince = now;
+    lastFaceAt = now;
+    gaze.tx = Math.max(-1, Math.min(1, (face.x - 0.5) * 2.4));
+    gaze.ty = Math.max(-1, Math.min(1, (face.y - 0.45) * 2));
+  } else {
+    faceSince = 0;
+  }
+
+  const visibleLongEnough = present && now - faceSince > T.spotDelayMs;
+  const near = present && face.near;
+
+  if (state === 'idle' && visibleLongEnough && now > cooldownUntil) {
+    near ? runEngaged() : runFar();
+  } else if (state === 'spotted' && near && visibleLongEnough) {
+    runEngaged();
+  } else if (state === 'spotted' && present && !near && now - lastFarCall > T.farRepeatMs) {
+    runFar();
+  } else if ((state === 'engaged' || state === 'spotted') && now - lastFaceAt > T.lostAfterMs) {
+    state === 'engaged' ? runLeave() : (point(false), shutUp(), setState('idle'));
+  } else if (state === 'idle' && !present && now - lastIdleTalk > T.idleEveryMs) {
+    lastIdleTalk = now;
+    say(pick(role.idle));
+  }
+
+  statusEl.textContent =
+    `Rolle: ${role.name}  Zustand: ${state}\n` +
+    `Person: ${face ? `${face.src} x=${face.x.toFixed(2)} y=${face.y.toFixed(2)} w=${face.w.toFixed(2)}${face.h ? ` h=${face.h.toFixed(2)}` : ''} ${face.near ? 'NAH' : 'weit'}` : '—'}\n` +
+    `Kamera: ${cameraState}\n` +
+    `Stimme: ${window.AUDIO?.[roleKey] ? 'Thorsten (MP3)' : 'keine MP3s → Browser'}${muted ? ' (stumm)' : ''}\n` +
+    `Notfall-Browserstimme (V): ${voice ? voice.name : 'keine'}${voice && !isMale(voice) ? ' ⚠ keine Männerstimme → Edge verwenden' : ''}${muted ? ' (stumm)' : ''}`;
+}
+
+/* ---------- camera + face detection (MediaPipe, läuft lokal im Browser) ---------- */
+let cameraState = 'aus';
+async function startCamera() {
+  try {
+    cameraState = 'lädt …';
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+
+    const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs');
+    const fileset = await vision.FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');
+    // Gesichter: genau, aber nur bis ca. 2 m
+    const faceDetector = await vision.FaceDetector.createFromOptions(fileset, {
+      baseOptions: {
+        modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
+        delegate: 'GPU',
+      },
+      runningMode: 'VIDEO',
+      minDetectionConfidence: 0.5,
+    });
+    // ganze Personen: findet Leute auch weiter hinten im Raum
+    const personDetector = await vision.ObjectDetector.createFromOptions(fileset, {
+      baseOptions: {
+        modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite',
+        delegate: 'GPU',
+      },
+      runningMode: 'VIDEO',
+      categoryAllowlist: ['person'],
+      scoreThreshold: T.minPersonScore,
+      maxResults: 5,
+    });
+    cameraState = 'aktiv';
+
+    let lastVideoTime = -1, frame = 0, person = null;
+    const loop = () => {
+      if (video.currentTime !== lastVideoTime) {
+        lastVideoTime = video.currentTime;
+        const vw = video.videoWidth, vh = video.videoHeight, now = performance.now();
+        // Personenerkennung ist teurer: nur jedes 3. Bild
+        if (frame++ % 3 === 0) {
+          const p = personDetector.detectForVideo(video, now).detections
+            .map((d) => d.boundingBox)
+            .sort((a, b) => b.width * b.height - a.width * a.height)[0];
+          person = p ? {
+            x: 1 - (p.originX + p.width / 2) / vw,
+            y: (p.originY + p.height * 0.1) / vh, // Kopf sitzt im oberen Zehntel des Körpers
+            w: p.width / vw,
+            h: p.height / vh,
+          } : null;
+        }
+        // "die eine Person": immer das größte (nächste) Gesicht nehmen
+        const f = faceDetector.detectForVideo(video, now).detections
+          .map((d) => d.boundingBox)
+          .sort((a, b) => b.width - a.width)[0];
+        if (f) {
+          const w = f.width / vw;
+          face = {
+            src: 'Gesicht',
+            x: 1 - (f.originX + f.width / 2) / vw, // spiegeln: Kamera schaut den Besucher an
+            y: (f.originY + f.height / 2) / vh,
+            w,
+            near: w >= T.nearFace || (person?.h ?? 0) >= T.nearPerson,
+          };
+        } else if (person) {
+          face = { src: 'Person', ...person, near: person.h >= T.nearPerson };
+        } else {
+          face = null;
+        }
+      }
+      tick();
+      requestAnimationFrame(loop);
+    };
+    loop();
+  } catch (err) {
+    console.warn('Kamera/Gesichtserkennung nicht verfügbar, Maus-Modus aktiv:', err);
+    cameraState = 'nicht verfügbar → Maus';
+    useMouse();
+  }
+}
+
+// fallback: mouse position acts as the visitor; holding the button = "near"
+function useMouse() {
+  let mouse = null, down = false;
+  addEventListener('mousemove', (e) => {
+    mouse = { x: e.clientX / innerWidth, y: e.clientY / innerHeight };
+  });
+  addEventListener('mouseleave', () => { mouse = null; });
+  addEventListener('mousedown', () => { down = true; });
+  addEventListener('mouseup', () => { down = false; });
+  const loop = () => {
+    face = mouse ? { ...mouse, src: 'Maus', w: down ? 0.3 : 0.1, near: down } : null;
+    tick();
+    requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+/* ---------- controls ---------- */
+addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); cooldownUntil = 0; runEngaged(); }
+  else if (k === '1' || k === '2' || k === '3') {
+    shutUp(); point(false); setState('idle');
+    applyRole(['expert', 'critic', 'beginner'][+k - 1]);
+    if ('speechSynthesis' in window) pickVoice();
+  }
+  else if (k === 'v') { cycleVoice(); }
+  else if (k === 'm') { muted = !muted; if (muted) { player.pause(); speechSynthesis.cancel(); } }
+  else if (k === 'f') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  else if (k === 'c') { document.body.classList.toggle('debug'); document.body.classList.toggle('show-cursor', document.body.classList.contains('debug')); }
+  else if (k === 'h') { $('#start').hidden = !$('#start').hidden; }
+  else if (k === 'escape') { $('#start').hidden = true; }
+});
+
+$('#go').addEventListener('click', async () => {
+  $('#start').hidden = true;
+  document.body.classList.remove('show-cursor');
+  try { await document.documentElement.requestFullscreen(); } catch {}
+  if (state === 'idle' && cameraState === 'aus') {
+    setInterval(wander, 2200);
+    startCamera();
+  }
+});
+
+/* ---------- init ---------- */
+applyRole('expert');
+point(false);
+animateGaze();
+try { new QRCode($('#qr'), { text: APP_URL, width: 256, height: 256, colorDark: '#14061f', colorLight: '#ffffff' }); }
+catch { $('#qr').style.display = 'none'; }
+</script>
+</body>
+</html>
