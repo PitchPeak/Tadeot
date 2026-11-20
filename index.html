@@ -126,7 +126,7 @@
   #preview {
     position: fixed; right: 12px; bottom: 12px; z-index: 5;
     width: 220px; border-radius: 10px; border: 2px solid var(--accent-2);
-    transform: scaleX(-1); display: none;
+    display: none;
   }
   body.debug #preview { display: block; }
   #status {
@@ -534,7 +534,7 @@ function point(on) {
    idle -> spotted (Gesicht weit weg) -> engaged (Gesicht nah) -> left -> cooldown -> idle */
 let state = 'idle';
 let faceSince = 0, lastFaceAt = 0, cooldownUntil = 0, lastIdleTalk = performance.now(), lastFarCall = 0;
-let face = null; // {x, y, w} normalised, already mirrored to screen space
+let face = null; // {x, y, w} normalised camera coordinates matching the preview
 let routine = 0;
 
 function setState(s) {
@@ -668,7 +668,7 @@ async function startCamera() {
             .map((d) => d.boundingBox)
             .sort((a, b) => b.width * b.height - a.width * a.height)[0];
           person = p ? {
-            x: 1 - (p.originX + p.width / 2) / vw,
+            x: (p.originX + p.width / 2) / vw,
             y: (p.originY + p.height * 0.1) / vh, // Kopf sitzt im oberen Zehntel des Körpers
             w: p.width / vw,
             h: p.height / vh,
@@ -682,7 +682,7 @@ async function startCamera() {
           const w = f.width / vw;
           face = {
             src: 'Gesicht',
-            x: 1 - (f.originX + f.width / 2) / vw, // spiegeln: Kamera schaut den Besucher an
+            x: (f.originX + f.width / 2) / vw, // gleiche horizontale Richtung wie die Kamera-Vorschau
             y: (f.originY + f.height / 2) / vh,
             w,
             near: w >= T.nearFace || (person?.h ?? 0) >= T.nearPerson,
